@@ -1,0 +1,8 @@
+# IBM watsonx.ai Python SDK
+ibm-watsonx-ai>=1.1.0
+
+# Web UI
+streamlit>=1.35.0
+
+# Env variable loading
+python-dotenv>=1.0.0
