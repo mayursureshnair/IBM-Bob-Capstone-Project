@@ -1,0 +1,548 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinLit AI — Architecture Blueprint</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 32px 24px 48px;
+  }
+
+  /* ── header ── */
+  .header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 32px;
+  }
+  .header-logo {
+    width: 48px; height: 48px; background: #10a37f;
+    border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; font-size: 1.4rem; flex-shrink: 0;
+  }
+  .header-text h1 { font-size: 1.35rem; font-weight: 700; color: #f8fafc; }
+  .header-text p  { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+  .badges { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .badge {
+    border-radius: 20px; padding: 2px 10px;
+    font-size: 0.68rem; font-weight: 600;
+  }
+  .b-green { background: #0a1f13; border: 1px solid #10a37f; color: #10a37f; }
+  .b-blue  { background: #0d0d2a; border: 1px solid #3b5bdb; color: #6b9ef8; }
+  .b-gray  { background: #1e2332; border: 1px solid #374151; color: #9ca3af; }
+
+  /* ── divider ── */
+  .divider { border: none; border-top: 1px solid #1e2332; margin: 24px 0; }
+
+  /* ── section label ── */
+  .section-label {
+    font-size: 0.68rem; font-weight: 700; color: #475569;
+    text-transform: uppercase; letter-spacing: .1em;
+    margin-bottom: 14px;
+  }
+
+  /* ── main flow diagram ── */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 28px;
+  }
+  .flow-node {
+    flex: 1; min-width: 130px;
+    background: #161b27;
+    border: 1px solid #1e2d3d;
+    border-radius: 12px;
+    padding: 16px 14px;
+    text-align: center;
+    position: relative;
+  }
+  .flow-node .fn-icon { font-size: 1.5rem; margin-bottom: 8px; }
+  .flow-node .fn-title { font-size: 0.8rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+  .flow-node .fn-sub   { font-size: 0.7rem; color: #64748b; line-height: 1.4; }
+  .flow-node.accent { border-color: #10a37f; background: #0a1a13; }
+  .flow-node.accent .fn-title { color: #34d399; }
+
+  .arrow {
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; flex-shrink: 0; color: #334155; font-size: 1.2rem;
+    position: relative;
+  }
+  .arrow::before {
+    content: ''; position: absolute; left: 50%;
+    top: 50%; transform: translate(-50%, -50%);
+    width: 1px; height: 40px; background: #1e2d3d;
+  }
+  .arrow-label {
+    position: absolute; top: calc(50% + 24px); left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.58rem; color: #475569; white-space: nowrap;
+    background: #0f1117; padding: 0 4px;
+  }
+
+  /* ── agentic loop ── */
+  .loop-box {
+    background: #0d1520;
+    border: 1px dashed #1e3a5f;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .loop-box .loop-label {
+    position: absolute; top: -10px; left: 20px;
+    background: #0f1117; padding: 0 8px;
+    font-size: 0.68rem; font-weight: 700; color: #3b82f6;
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+  .loop-steps {
+    display: flex; align-items: flex-start; gap: 0;
+  }
+  .loop-step {
+    flex: 1;
+    background: #131c2e;
+    border: 1px solid #1e3557;
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+  }
+  .loop-step .ls-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #1e3a6e; color: #60a5fa;
+    font-size: 0.72rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 8px;
+  }
+  .loop-step .ls-title { font-size: 0.77rem; font-weight: 600; color: #93c5fd; margin-bottom: 4px; }
+  .loop-step .ls-desc  { font-size: 0.68rem; color: #475569; line-height: 1.4; }
+  .loop-arrow {
+    width: 32px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #1e3557; font-size: 1rem;
+  }
+  .loop-back {
+    margin-top: 10px; text-align: center;
+    font-size: 0.68rem; color: #475569;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .loop-back-arrow { color: #1e3557; font-size: 0.9rem; }
+
+  /* ── two-column layout ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .col-box {
+    background: #161b27;
+    border: 1px solid #1e2d3d;
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .col-box h3 { font-size: 0.8rem; font-weight: 700; color: #f1f5f9; margin-bottom: 14px; }
+
+  /* ── tool grid ── */
+  .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tool-item {
+    background: #0f1520;
+    border: 1px solid #1e2d3d;
+    border-radius: 8px;
+    padding: 9px 11px;
+  }
+  .tool-item .ti-name { font-size: 0.75rem; font-weight: 600; color: #34d399; margin-bottom: 2px; }
+  .tool-item .ti-desc { font-size: 0.67rem; color: #475569; }
+
+  /* ── stack list ── */
+  .stack-list { display: flex; flex-direction: column; gap: 8px; }
+  .stack-item {
+    display: flex; align-items: center; gap: 10px;
+    background: #0f1520; border: 1px solid #1e2d3d;
+    border-radius: 8px; padding: 8px 12px;
+  }
+  .stack-item .si-icon { font-size: 1rem; flex-shrink: 0; }
+  .stack-item .si-name { font-size: 0.77rem; font-weight: 600; color: #f1f5f9; }
+  .stack-item .si-sub  { font-size: 0.67rem; color: #475569; }
+
+  /* ── file tree ── */
+  .file-tree {
+    background: #0f1520;
+    border: 1px solid #1e2d3d;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 28px;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 0.75rem;
+  }
+  .file-tree h3 { font-family: -apple-system, "Segoe UI", sans-serif; font-size: 0.8rem; font-weight: 700; color: #f1f5f9; margin-bottom: 14px; }
+  .ft-line { line-height: 2; color: #64748b; }
+  .ft-line .ft-dir  { color: #60a5fa; font-weight: 600; }
+  .ft-line .ft-file { color: #e2e8f0; }
+  .ft-line .ft-tag  {
+    margin-left: 8px; font-family: -apple-system, sans-serif;
+    font-size: 0.65rem; background: #1e2d3d;
+    border-radius: 4px; padding: 1px 6px; color: #64748b;
+  }
+  .ft-line .ft-core { color: #34d399; }
+  .ft-line .ft-ui   { color: #a78bfa; }
+  .ft-line .ft-cfg  { color: #fbbf24; }
+
+  /* ── data flow ── */
+  .data-flow {
+    background: #161b27;
+    border: 1px solid #1e2d3d;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 28px;
+  }
+  .data-flow h3 { font-size: 0.8rem; font-weight: 700; color: #f1f5f9; margin-bottom: 16px; }
+  .df-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    margin-bottom: 10px; padding-bottom: 10px;
+    border-bottom: 1px solid #1e2332;
+  }
+  .df-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .df-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+  }
+  .df-n1 { background: #1a2e1a; color: #34d399; border: 1px solid #34d399; }
+  .df-n2 { background: #1a1a2e; color: #60a5fa; border: 1px solid #60a5fa; }
+  .df-n3 { background: #2e1a1a; color: #f87171; border: 1px solid #f87171; }
+  .df-n4 { background: #2e2a1a; color: #fbbf24; border: 1px solid #fbbf24; }
+  .df-n5 { background: #1a2e2a; color: #2dd4bf; border: 1px solid #2dd4bf; }
+  .df-content .df-title { font-size: 0.77rem; font-weight: 600; color: #f1f5f9; margin-bottom: 3px; }
+  .df-content .df-detail { font-size: 0.7rem; color: #475569; }
+
+  /* ── security box ── */
+  .security-box {
+    background: #0a1f13;
+    border: 1px solid #10a37f;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .sec-item .sec-icon { font-size: 1.1rem; margin-bottom: 6px; }
+  .sec-item .sec-title { font-size: 0.77rem; font-weight: 600; color: #34d399; margin-bottom: 3px; }
+  .sec-item .sec-desc  { font-size: 0.69rem; color: #475569; line-height: 1.5; }
+
+  /* ── footer ── */
+  .footer {
+    margin-top: 32px; padding-top: 16px;
+    border-top: 1px solid #1e2332;
+    text-align: center;
+    font-size: 0.72rem; color: #334155;
+  }
+</style>
+</head>
+<body>
+
+
+<div class="header">
+  <div class="header-logo">🏦</div>
+  <div class="header-text">
+    <h1>FinLit AI — Architecture Blueprint</h1>
+    <p>Digital Financial Literacy Agent · IBM Granite 4H Small · watsonx.ai</p>
+    <div class="badges">
+      <span class="badge b-green">ibm/granite-4-h-small</span>
+      <span class="badge b-blue">IBM watsonx.ai · us-south</span>
+      <span class="badge b-gray">Python 3.11+</span>
+      <span class="badge b-gray">Streamlit 1.63</span>
+      <span class="badge b-gray">9 Active Tools</span>
+      <span class="badge b-gray">RAG-grounded · Multilingual</span>
+    </div>
+  </div>
+</div>
+<hr class="divider" />
+
+
+<div class="section-label">High-Level System Flow</div>
+<div class="flow">
+
+  <div class="flow-node">
+    <div class="fn-icon">🧑</div>
+    <div class="fn-title">User</div>
+    <div class="fn-sub">Streamlit Web UI<br />or CLI (main.py)</div>
+  </div>
+
+  <div class="arrow">→
+    <span class="arrow-label">question</span>
+  </div>
+
+  <div class="flow-node">
+    <div class="fn-icon">🌐</div>
+    <div class="fn-title">app.py</div>
+    <div class="fn-sub">Streamlit UI<br />Dark ChatGPT theme<br />Session history</div>
+  </div>
+
+  <div class="arrow">→
+    <span class="arrow-label">chat()</span>
+  </div>
+
+  <div class="flow-node accent">
+    <div class="fn-icon">🤖</div>
+    <div class="fn-title">FinancialLiteracyAgent</div>
+    <div class="fn-sub">agent.py<br />Tool-calling loop<br />System prompt</div>
+  </div>
+
+  <div class="arrow">→
+    <span class="arrow-label">chat API</span>
+  </div>
+
+  <div class="flow-node">
+    <div class="fn-icon">🧠</div>
+    <div class="fn-title">IBM Granite 4H Small</div>
+    <div class="fn-sub">ibm/granite-4-h-small<br />watsonx.ai<br />30B parameters</div>
+  </div>
+
+  <div class="arrow">→
+    <span class="arrow-label">tool_calls</span>
+  </div>
+
+  <div class="flow-node">
+    <div class="fn-icon">🔧</div>
+    <div class="fn-title">Tools (9)</div>
+    <div class="fn-sub">tools.py<br />Financial calcs<br />UPI · Scams · Loans</div>
+  </div>
+
+  <div class="arrow">→
+    <span class="arrow-label">reply</span>
+  </div>
+
+  <div class="flow-node">
+    <div class="fn-icon">💬</div>
+    <div class="fn-title">Response</div>
+    <div class="fn-sub">Grounded answer<br />Formatted reply<br />Shown to user</div>
+  </div>
+
+</div>
+
+
+<div class="loop-box">
+  <div class="loop-label">Agentic Tool-Calling Loop — agent.py</div>
+  <div class="loop-steps">
+
+    <div class="loop-step">
+      <div class="ls-num">1</div>
+      <div class="ls-title">Build Messages</div>
+      <div class="ls-desc">System prompt + conversation history + new user message</div>
+    </div>
+    <div class="loop-arrow">→</div>
+
+    <div class="loop-step">
+      <div class="ls-num">2</div>
+      <div class="ls-title">Call Granite</div>
+      <div class="ls-desc">POST messages + 9 tool schemas to watsonx.ai Chat API</div>
+    </div>
+    <div class="loop-arrow">→</div>
+
+    <div class="loop-step">
+      <div class="ls-num">3</div>
+      <div class="ls-title">Check finish_reason</div>
+      <div class="ls-desc">"tool_calls" → execute tools<br />"stop" → return answer</div>
+    </div>
+    <div class="loop-arrow">→</div>
+
+    <div class="loop-step">
+      <div class="ls-num">4</div>
+      <div class="ls-title">Execute Tools</div>
+      <div class="ls-desc">dispatch_tool(name, args)<br />Returns JSON result</div>
+    </div>
+    <div class="loop-arrow">→</div>
+
+    <div class="loop-step">
+      <div class="ls-num">5</div>
+      <div class="ls-title">Append Results</div>
+      <div class="ls-desc">role: "tool" messages added to history</div>
+    </div>
+
+  </div>
+  <div class="loop-back">
+    <span class="loop-back-arrow">↩</span>
+    Loop back to Step 2 until finish_reason = "stop" (max 5 rounds)
+  </div>
+</div>
+
+
+<div class="two-col">
+
+  <div class="col-box">
+    <h3>🔧 Financial Tools (tools.py)</h3>
+    <div class="tool-grid">
+      <div class="tool-item">
+        <div class="ti-name">calculate_compound_interest</div>
+        <div class="ti-desc">FV of investment · A = P(1+r/n)^nt</div>
+      </div>
+      <div class="tool-item">
+        <div class="ti-name">calculate_loan_payment</div>
+        <div class="ti-desc">Monthly EMI · total interest</div>
+      </div>
+      <div class="tool-item">
+        <div class="ti-name">calculate_budget</div>
+        <div class="ti-desc">50/30/20 rule · savings rate</div>
+      </div>
+      <div class="tool-item">
+        <div class="ti-name">calculate_retirement_savings</div>
+        <div class="ti-desc">SIP-style FV · balance at 65</div>
+      </div>
+      <div class="tool-item">
+        <div class="ti-name">calculate_sip_returns</div>
+        <div class="ti-desc">Monthly SIP · mutual fund FV</div>
+      </div>
+      <div class="tool-item">
+        <div class="ti-name">get_upi_guidance</div>
+        <div class="ti-desc">How-to · safety · limits · apps</div>
+      </div>
+      <div class="tool-item">
+        <div class="ti-name">assess_scam_risk</div>
+        <div class="ti-desc">Risk score 0–100 · red flags</div>
+      </div>
+      <div class="tool-item">
+        <div class="ti-name">get_loan_interest_info</div>
+        <div class="ti-desc">RBI-sourced safe rates · India</div>
+      </div>
+      <div class="tool-item" style="grid-column:span 2">
+        <div class="ti-name">explain_financial_concept</div>
+        <div class="ti-desc">Compound interest · emergency fund · diversification · inflation · index fund · DTI</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-box">
+    <h3>🛠 Technology Stack</h3>
+    <div class="stack-list">
+      <div class="stack-item">
+        <span class="si-icon">🧠</span>
+        <div>
+          <div class="si-name">IBM Granite 4H Small</div>
+          <div class="si-sub">ibm/granite-4-h-small · 30B params · 131k context · Native tool-calling</div>
+        </div>
+      </div>
+      <div class="stack-item">
+        <span class="si-icon">☁️</span>
+        <div>
+          <div class="si-name">IBM watsonx.ai</div>
+          <div class="si-sub">ibm-watsonx-ai ≥1.7 SDK · us-south · ModelInference.chat()</div>
+        </div>
+      </div>
+      <div class="stack-item">
+        <span class="si-icon">🌐</span>
+        <div>
+          <div class="si-name">Streamlit 1.63</div>
+          <div class="si-sub">Web UI · Dark theme · st.chat_input · st.chat_message</div>
+        </div>
+      </div>
+      <div class="stack-item">
+        <span class="si-icon">🐍</span>
+        <div>
+          <div class="si-name">Python 3.11+</div>
+          <div class="si-sub">math · json · os · dotenv · typing</div>
+        </div>
+      </div>
+      <div class="stack-item">
+        <span class="si-icon">⚙️</span>
+        <div>
+          <div class="si-name">Config</div>
+          <div class="si-sub">.streamlit/config.toml · config.py · .env.example</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<div class="file-tree">
+  <h3>📁 Project Structure</h3>
+  <div class="ft-line">capstone-project-ibmbob/</div>
+  <div class="ft-line">  ├── <span class="ft-ui">app.py</span> <span class="ft-tag">Streamlit Web UI · Dark ChatGPT theme</span></div>
+  <div class="ft-line">  ├── <span class="ft-ui">main.py</span> <span class="ft-tag">CLI interface · interactive terminal chat</span></div>
+  <div class="ft-line">  ├── <span class="ft-cfg">requirements.txt</span> <span class="ft-tag">ibm-watsonx-ai · streamlit · python-dotenv</span></div>
+  <div class="ft-line">  ├── <span class="ft-cfg">.env.example</span> <span class="ft-tag">WATSONX_API_KEY · WATSONX_PROJECT_ID · WATSONX_URL</span></div>
+  <div class="ft-line">  ├── <span class="ft-cfg">.streamlit/config.toml</span> <span class="ft-tag">base=dark · backgroundColor=#212121 · primaryColor=#10a37f</span></div>
+  <div class="ft-line">  └── <span class="ft-dir">financial_literacy_agent/</span></div>
+  <div class="ft-line">      ├── <span class="ft-core">agent.py</span> <span class="ft-tag">FinancialLiteracyAgent · agentic loop · system prompt</span></div>
+  <div class="ft-line">      ├── <span class="ft-core">tools.py</span> <span class="ft-tag">9 tool functions · JSON schemas · dispatch_tool()</span></div>
+  <div class="ft-line">      ├── <span class="ft-cfg">config.py</span> <span class="ft-tag">API key · project ID · model ID · URL defaults</span></div>
+  <div class="ft-line">      └── <span class="ft-file">__init__.py</span> <span class="ft-tag">package exports</span></div>
+</div>
+
+
+<div class="data-flow">
+  <h3>📡 Message &amp; Data Flow</h3>
+
+  <div class="df-row">
+    <div class="df-num df-n1">1</div>
+    <div class="df-content">
+      <div class="df-title">User types a question → app.py</div>
+      <div class="df-detail">st.chat_input captures text · stored in st.session_state["messages"] · conversation history maintained across turns</div>
+    </div>
+  </div>
+
+  <div class="df-row">
+    <div class="df-num df-n2">2</div>
+    <div class="df-content">
+      <div class="df-title">app.py → agent.chat(query, history)</div>
+      <div class="df-detail">Passes user message + full conversation history to FinancialLiteracyAgent · returns (reply, updated_history)</div>
+    </div>
+  </div>
+
+  <div class="df-row">
+    <div class="df-num df-n3">3</div>
+    <div class="df-content">
+      <div class="df-title">agent.py → ModelInference.chat(messages, tools=TOOLS_SCHEMA)</div>
+      <div class="df-detail">Sends [system prompt + history + user message] + 9 tool schemas to ibm/granite-4-h-small via watsonx.ai REST API · model decides whether to call tools or answer directly</div>
+    </div>
+  </div>
+
+  <div class="df-row">
+    <div class="df-num df-n4">4</div>
+    <div class="df-content">
+      <div class="df-title">finish_reason = "tool_calls" → dispatch_tool(name, arguments_json)</div>
+      <div class="df-detail">tools.py executes the matching Python function (math-based, no external API) · returns structured JSON result · appended as role:"tool" messages · loop repeats</div>
+    </div>
+  </div>
+
+  <div class="df-row">
+    <div class="df-num df-n5">5</div>
+    <div class="df-content">
+      <div class="df-title">finish_reason = "stop" → final reply returned to UI</div>
+      <div class="df-detail">Granite composes a plain-English answer grounded in tool results · reply displayed in chat bubble · history updated for next turn</div>
+    </div>
+  </div>
+
+</div>
+
+
+<div class="section-label">Design Principles</div>
+<div class="security-box">
+  <div class="sec-item">
+    <div class="sec-icon">🔐</div>
+    <div class="sec-title">Credentials Never Exposed</div>
+    <div class="sec-desc">API key and Project ID stored in config.py only. Never rendered in the UI. .env.example provided for local use. .gitignore blocks .env.</div>
+  </div>
+  <div class="sec-item">
+    <div class="sec-icon">🧮</div>
+    <div class="sec-title">Calculations Always Tool-Grounded</div>
+    <div class="sec-desc">Model never estimates numbers. All financial calculations go through deterministic Python math functions. Results are exact and verifiable.</div>
+  </div>
+  <div class="sec-item">
+    <div class="sec-icon">🌐</div>
+    <div class="sec-title">Multilingual by Design</div>
+    <div class="sec-desc">Granite 4H Small supports 12 languages natively. System prompt instructs the model to respond in Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada on request.</div>
+  </div>
+</div>
+
+
+<div class="footer">
+  Made with IBM Bob  ·  FinLit AI Architecture Blueprint  ·  ibm/granite-4-h-small on watsonx.ai
+</div>
+
+</body>
+</html>
