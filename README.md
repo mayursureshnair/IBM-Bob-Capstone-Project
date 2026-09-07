@@ -15,4 +15,4 @@ The agent ensures financial literacy is accessible, personalized, and culturally
 This AI-driven assistant empowers users with knowledge, protects them from fraud, and builds
 confidence in digital finance.
 
-Technology – Use of IBM Cloud Lite services / IBM Granite is mandatory
+Technology – Used IBM Cloud Lite services and IBM Granite.
